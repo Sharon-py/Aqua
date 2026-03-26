@@ -12,7 +12,7 @@ class AquaApp(tk.Tk):
 
         print("[DEBUG] AquaApp.__init__")
 
-        # -------- Police Pixel NES (installée dans Windows) --------
+        # -------- Police Pixel NES --------
         self.pixel_font = font.Font(family="Pixel NES", size=12)
         self.pixel_font_small = font.Font(family="Pixel NES", size=9)
 
@@ -29,10 +29,10 @@ class AquaApp(tk.Tk):
         self.hourly_goal_cl = config.HOURLY_GOAL_CL
         self.daily_goal_cl = config.DAILY_GOAL_CL
 
-        # XP
+        # XP : nombre de réussites d'affilée nécessaires = niveau
         self.level = 1
         self.xp = 0
-        self.xp_needed = 3
+        self.xp_needed = self.level
 
         # Humeur + scintillement
         self.drop_mood = "neutral"   # "neutral" | "happy" | "sad"
@@ -80,7 +80,7 @@ class AquaApp(tk.Tk):
             fg="#3e2723"
         ).pack(pady=(4, 0))
 
-        # Nom + niveau + XP
+        # Nom + niveau (ligne juste au-dessus de la barre d'XP)
         self.status_label = tk.Label(
             self.card,
             text="",
@@ -88,21 +88,35 @@ class AquaApp(tk.Tk):
             bg=card_bg,
             fg="#3e2723"
         )
-        self.status_label.pack(pady=(2, 4))
+        self.status_label.pack(pady=(2, 0))
 
-        # ---------------- Zone du personnage ----------------
-        drop_area = tk.Frame(self.card, bg=card_bg, bd=4, relief="ridge")
-        drop_area.pack(pady=(0, 6))
+        # ---------- BARRE D'XP SOUS LE NOM ----------
+        xp_bar_frame = tk.Frame(self.card, bg=card_bg)
+        xp_bar_frame.pack(pady=(0, 6))
 
-        # Barre XP au-dessus de la scène
+        # "XP" à gauche
+        self.xp_text_label = tk.Label(
+            xp_bar_frame,
+            text="XP",
+            font=self.pixel_font_small,
+            bg=card_bg,
+            fg="#3e2723"
+        )
+        self.xp_text_label.pack(side="left", padx=(0, 4))
+
+        # Barre à droite
         self.xp_progress = ttk.Progressbar(
-            drop_area,
+            xp_bar_frame,
             length=120,
             mode="determinate",
             maximum=self.xp_needed,
             style="XP.TProgressbar"
         )
-        self.xp_progress.pack(pady=(2, 4))
+        self.xp_progress.pack(side="left")
+
+        # ---------------- Zone du personnage ----------------
+        drop_area = tk.Frame(self.card, bg=card_bg, bd=4, relief="ridge")
+        drop_area.pack(pady=(0, 6))
 
         # Canvas de la scène
         self.drop_canvas = tk.Canvas(
@@ -191,7 +205,6 @@ class AquaApp(tk.Tk):
         self.update_xp_ui()
 
         # ---------------- Popup de nom ----------------
-        # on l'ouvre après un tout petit délai
         self.after(50, self.ask_drop_name)
 
     # ==========================================================
@@ -258,8 +271,6 @@ class AquaApp(tk.Tk):
             relief="ridge"
         ).pack(pady=8)
 
-        # on peut laisser Tk gérer, pas besoin de wait_window ici
-
     # ==========================================================
     #                   Boutons CL
     # ==========================================================
@@ -290,6 +301,7 @@ class AquaApp(tk.Tk):
             )
 
         oy = -1 if jump else 0
+        level = getattr(self, "level", 1)
 
         # --- décor ---
         wall = "#f7f2e8"
@@ -351,16 +363,28 @@ class AquaApp(tk.Tk):
         eye = "#3a2a29"
         shadow = "#a78363"
 
+        # ombre
         for x in range(13, 23):
             p(x, 16, shadow)
 
-        body_pixels = [
-            (18, 9),
-            (17, 10), (18, 10), (19, 10),
-            (16, 11), (17, 11), (18, 11), (19, 11), (20, 11),
-            (16, 12), (17, 12), (18, 12), (19, 12), (20, 12),
-            (17, 13), (18, 13), (19, 13),
-        ]
+        # corps selon le niveau
+        if level == 1:
+            # petite goutte “bébé”
+            body_pixels = [
+                (18, 10),
+                (17, 11), (18, 11), (19, 11),
+                (17, 12), (18, 12), (19, 12),
+                (18, 13),
+            ]
+        else:
+            # taille “adulte”
+            body_pixels = [
+                (18, 9),
+                (17, 10), (18, 10), (19, 10),
+                (16, 11), (17, 11), (18, 11), (19, 11), (20, 11),
+                (16, 12), (17, 12), (18, 12), (19, 12), (20, 12),
+                (17, 13), (18, 13), (19, 13),
+            ]
 
         highlight_pixels = [
             (17, 10),
@@ -389,6 +413,7 @@ class AquaApp(tk.Tk):
             (17, 13), (18, 13), (19, 13),
         ]
 
+        # corps
         for (x, y) in body_pixels:
             p(x, y + oy, body)
         for (x, y) in dark_border:
@@ -402,11 +427,42 @@ class AquaApp(tk.Tk):
         for (x, y) in mouth_pixels:
             p(x, y + oy, eye)
 
+        # --- évolutions visuelles par niveau ---
+
+        # Niveau 2+ : petite ceinture foncée (un peu plus “costaud”)
+        if level >= 2:
+            for (x, y) in [(16, 12), (17, 12), (18, 12), (19, 12), (20, 12)]:
+                p(x, y + oy, body_dark)
+
+        # Niveau 3+ : quelques étoiles proches
+        if level >= 3:
+            star1 = "#fff7b0"
+            star2 = "#ffffff"
+            for (x, y, col) in [
+                (13, 10, star1),
+                (22, 9, star2),
+            ]:
+                p(x, y + oy, col)
+
+        # Niveau 4 : aura d’étoiles autour
+        if level >= 4:
+            aura1 = "#fff9c4"
+            aura2 = "#ffe082"
+            for (x, y, col) in [
+                (14, 8, aura1),
+                (22, 7, aura2),
+                (12, 12, aura1),
+                (24, 11, aura2),
+            ]:
+                p(x, y + oy, col)
+
+        # scintillement si heureuse (on garde)
         if getattr(self, "sparkle_on", False) and mood == "happy":
             sparkle_color1 = "#ffffff"
             sparkle_color2 = "#fff7b0"
             for i, (sx, sy) in enumerate([(13, 8), (23, 9), (15, 7), (21, 7)]):
                 p(sx, sy, sparkle_color1 if i % 2 == 0 else sparkle_color2)
+
 
     def draw_popup_drop(self, canvas: tk.Canvas, happy: bool = True):
         canvas.delete("all")
@@ -474,11 +530,19 @@ class AquaApp(tk.Tk):
     #                   XP UI
     # ==========================================================
     def update_xp_ui(self):
-        self.xp_progress["value"] = self.xp
         name = self.drop_name_var.get()
+
+        # Nom + niveau
         self.status_label.config(
-            text=f"{name} – Niveau {self.level} – XP {self.xp}/{self.xp_needed}"
+            text=f"{name} – Niveau {self.level}"
         )
+
+        # Barre d'XP
+        self.xp_progress["maximum"] = self.xp_needed
+        self.xp_progress["value"] = self.xp
+
+        # Texte à côté (juste "XP")
+        self.xp_text_label.config(text="XP")
 
     # ==========================================================
     #                   Timer
@@ -512,28 +576,43 @@ class AquaApp(tk.Tk):
         missing = self.hourly_goal_cl - self.hour_cl
 
         if missing > 0:
+            # Échec → on perd 1 niveau (min 1) et on reset l'XP
             if self.level > 1:
                 self.level -= 1
             self.xp = 0
+            self.xp_needed = self.level
             self.drop_mood = "sad"
             self.update_xp_ui()
             self.show_hour_popup(False, missing)
         else:
+            # Succès → +1 réussite dans le combo
             self.xp += 1
-            if self.xp >= self.xp_needed and self.level < 3:
+
+            # Si on n'est pas au max, on peut monter de niveau
+            if self.level < 4 and self.xp >= self.xp_needed:
                 self.level += 1
                 self.xp = 0
+                self.xp_needed = self.level
+            elif self.level >= 4:
+                # Niveau max : garde l'XP à fond
+                if self.xp > self.xp_needed:
+                    self.xp = self.xp_needed
+
             self.drop_mood = "happy"
             self.update_xp_ui()
             self.show_hour_popup(True, 0)
 
+        # Redessine la goutte avec la nouvelle humeur / nouveau niveau
         self.draw_kawaii_drop(jump=self.drop_jump_state)
 
+        # Reset de l'heure
         self.hour_cl = 0
         self.hour_label.config(
             text=f"Sur cette heure : 0 / {self.hourly_goal_cl} cl"
         )
         self.hour_progress["value"] = 0
+
+
 
     # ==========================================================
     #                   Popup fin d'heure
