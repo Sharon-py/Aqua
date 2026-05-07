@@ -10,13 +10,11 @@ BG_COLOR = "#fce4ec"       # rose pastel
 ACCENT_COLOR = "#81d4fa"   # bleu eau
 
 # Intervalle par défaut (en minutes) pour un cycle
-DEFAULT_INTERVAL_MIN = 0.1666   # 0.1666 minute = 10 secondes
+DEFAULT_INTERVAL_MIN = 60  
  # 1h
 
 # Objectif d'hydratation par heure (en cl)
-HOURLY_GOAL_CL = 20  # par exemple 25 cl par heure
-# Objectif d'hydratation par heure (en cl)
-HOURLY_GOAL_CL = 25  # par exemple 25 cl/h
+HOURLY_GOAL_CL = 25  
 
 # Objectif d'hydratation par jour (en cl)
-DAILY_GOAL_CL = 150  # par exemple 1,5 L = 150 cl
+DAILY_GOAL_CL = 150  
