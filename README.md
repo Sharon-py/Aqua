@@ -4,7 +4,7 @@
 The idea is simple: keep a small pixel-art water drop companion open while working, log how much water you drink, and let Aqua help you stay consistent throughout the day.
 
 <p align="center">
-  <em>A kawaii pixel-art hydration tracker for focused work sessions.</em>
+  <em>A cute pixel-art hydration tracker for focused work sessions.</em>
 </p>
 
 ---
